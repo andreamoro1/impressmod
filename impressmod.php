@@ -1,5 +1,15 @@
 <?php
 
+/******
+*
+* impressmod.php
+* by Andrea Moro, Jan 2014 impressmod at andreamoro.net
+* 
+* modifies some div attributes in html file containing impress.js slides
+* refer to impress.js for details
+*
+******/
+
 include('simple_html_dom.php');
 
 $shortopts = "fhx:y:z:s:";
@@ -31,7 +41,7 @@ Options:
  
  --fm: force substitution also if value is missing (default: false)
  --steps = 'string': string with step values (comma separated, hyphen for ranges)
-      default: all slides
+      (default: all slides)
  
 Examples
 
