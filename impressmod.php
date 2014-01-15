@@ -1,6 +1,6 @@
 <?php
 
-/******
+/**************************************************************************************
 *
 * impressmod.php
 * by Andrea Moro, Jan 2014 impressmod at andreamoro.net
@@ -8,64 +8,134 @@
 * modifies some div attributes in html file containing impress.js slides
 * refer to impress.js for details
 *
-******/
+**************************************************************************************/
 
 include('simple_html_dom.php');
 
-$shortopts = "fhx:y:z:s:";
+$shortopts = "hv";
 $longoptions = array('x:','y:','z:','rx:','ry:','rz:'
-                    ,'s:','fm','steps:','help','f:','o:');
+                    ,'s:','fm','steps:','help','f:','o:'
+                    ,'restore');
 $options = getopt($shortopts,$longoptions);
 
+if (sizeof($options)==0) $options['h']=1;
 
-// some help stuff
-if (isset($options['h'])) {
+// some help stuff and version
+if (isset($options['v'])) {
+	echo "
+impressmod.php version 0.231
+
+type php impressmod.php --h for help
+";
+	exit;
+}
+
+if (isset($options['h']) | isset($options['help']) ) {
   echo "
-Options:
+NAME 
+	impressmod.php php script to modify impress.js slides
 
- --f: input filename
- --o: output filename (default: =input filename)
- 
- --x: data-x
- --y: data-y
- --z: data-z
- --rx: data-rotate-x
- --ry: data-rotate-y
- --rz: data-rotate-z
- --s: scale 
- 
- Option values:
-	  +n,-n (add and subtract n from value)
-	  =n (substitute value with n)
-	  dn (add n*x from value - to increase distance between steps)
- 
- --fm: force substitution also if value is missing (default: false)
- --steps = 'string': string with step values (comma separated, hyphen for ranges)
-      (default: all slides)
- 
-Examples
+SYNOPSIS
+    php impressmod.php 	[--f <file>] [--o <file>] [--x <value>] [--y <value>] [--z <value>]
+    					[--rx <value>] [--ry <value>] [--rz <value>>] [--s <value>] [--fm]
+    					[--steps <string>] [-h]
 
-php impressmod.php --f input.html --steps 3-5 --x -20 --y =200
-   decrease data-x by 20 and set data-y to 200 on slides 3,4,5 of input.html 
-   and overwrite the file
-php impressmod.php --f input.html
-   list available slides and their id, if present
-php impressmod.php --f input.html --output output.html --steps 2,3,8-9 --x d20 --fm
-   increase the data-x gap between slides 2 and 3, 3 and 8, and 
-   8 and 9 by 20. Slides 2 remains unchanged. Data-x will be set 
-   wherever missing
-php impressmod.php --f input.html --steps 5-2,overview,8
-   process slides in the following order: 5,4,3,2,[id=overview],5,4
-  
+DESCRIPTION
+	modifies location attributes of html slides created for impressmod.js
+	requires php with simple_html_dom.php library
+
+OPTIONS
+
+	--f <file>
+	  input filename (required)
+	  
+	--o <file>  
+	  output filename (default: =input filename)
  
+	--x <value>
+	  data-x attribute change
+	  <value>:
+	    +n,-n (add and subtract n from value)
+	    =n (substitute value with n)
+	    dn (add n*x from value - to increase distance between steps
+
+	--y <value>
+	  data-y attribute change, <value> see --x
+	--z <value>
+	  data-z attribute change, <value> see --x
+	--rx <value>
+	  data-rotate-x attribute change, <value> see --x
+	--ry <value>
+	  data-rotate-y attribute change, <value> see --x
+	--rz <value>
+	  data-rotate-z attribute change, <value> see --x
+	--s <value>
+	  scale attribute change, <value> see --x
+ 
+
+	--fm
+	  force substitution when attribute is missing (default: false)
+    
+    --steps <string> 
+      slides to modify (default: all steps)
+	  <string>
+	  	comma-separated string of integers of step number, 
+	  	hyphen-separate ranges, and step #ids
+	  	
+	--restore --f <inputfile>
+	  restores <inputfile>.bak to <inputfile> 
+	  	
+	--help 
+	  this help file
+	  
+	--version
+	  prints version number
+	  
+EXAMPLES
+
+1) php impressmod.php --f input.html --steps 3-5,7 --x -20 --y =200
+	decrease data-x by 20 and set data-y to 200 on slides 3,4,5,7 of input.html 
+	and overwrite the file 
+	does not modify attribute on slides where  they are missing
+
+2) php impressmod.php --f input.html
+	list available slides and their id, if present
+
+3) php impressmod.php --f input.html --output output.html --steps 2,3,8-9 --x d20 --fm
+	increase the data-x gap between slides 2 and 3, 3 and 8, and 8 and 9 by 20. 
+	Slides 2 remains unchanged. Data-x will be created wherever missing
+
+4) php impressmod.php --f input.html --steps 5-2,overview,8
+	process slides in the following order: 5,4,3,2,[id=overview],8
+	
+AUTHORS
+	andrea moro imprssmod@andreamoro.net 1/2014
+	
+LICENSE
+	GPL
+
 ";
 	exit;
 } 
 
 
-
 // let's start with the whole enchilada. Get first the file to parse
 $inputfile =  $options['f'];
+
+if (isset($options['restore'])) {
+    if (!isset($options['f'])) {
+    	echo "\n Please specify a filename to restore with --f <filename> (without .bak)\n";
+    } else {
+		$fp2 = fopen($inputfile.'.bak','r');
+       	$fp = fopen($inputfile,'w');
+		$oldfile = fread($fp2,filesize($inputfile.'.bak'));
+		fwrite($fp,$oldfile);
+		fclose($fp);
+		fclose($fp2);
+		echo "\n $inputfile restored from $inputfile.bak \n";
+	}
+	exit;    	
+}
 
 if (!isset($options['o'])) { 
 	$outputfile = $inputfile; 
@@ -74,18 +144,20 @@ if (!isset($options['o'])) {
 }
 echo "\nInput file: $inputfile";
 
+// get the dom from input file
 $html = new simple_html_dom();
-
 $html -> load_file($inputfile);
 
+// we only need the step divs, so let's get them
 $steps = $html -> find('div.step');
 $num_steps = sizeof($steps);
-
 echo "\nTotal slides: " . $num_steps . "\n";
 
 // find the slides needed to be processed
+// default is to process all slides
 if (!isset($options['steps'])) $options['steps'] = '1-';
 
+// split requested slides into chunks and find out if they exist
 $slideranges = split(',',$options['steps']);
 $slides = array();
 $slidesnotfound = array();
@@ -129,8 +201,7 @@ echo 'Slides to process: ' . implode(',',$slides) . "\n";
 if (sizeof($slidesnotfound)>0) echo 'Slides not found: ' . implode(',',$slidesnotfound) . "\n";
 echo "\n";
 
-var_dump($options);
-// find the attributes to modify
+// now find the attributes to modify
 $attributes = array();
 foreach ($options as $optionkey=>$optionvalue) { 
 
@@ -146,9 +217,7 @@ foreach ($options as $optionkey=>$optionvalue) {
 	}
 }
 
-var_dump($attributes);
-
-// now start processing slides 
+// now start processing slides and change attributes
 foreach ($slides as $key=>$slide) {
 	$step = $steps[$slide-1];
 	
@@ -178,6 +247,7 @@ foreach ($slides as $key=>$slide) {
   }
 }
 
+// back up and write files
 $fp = fopen($inputfile,'r');
 $fp2 = fopen($inputfile.'.bak','w');
 $oldfile = fread($fp,filesize($inputfile));

@@ -46,6 +46,9 @@ OPTIONS
       slides to modify (default: all steps)
 	  <string>
 	  	comma-separated string of integers of step number, hyphen-separate ranges, and step #ids
+	
+	--restore --f <inputfile>
+	  restores <inputfile>.bak to <inputfile> 
 	  	
 	--help 
 	  this help file
