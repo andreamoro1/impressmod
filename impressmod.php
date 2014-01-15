@@ -92,36 +92,36 @@ $slidesnotfound = array();
 
 foreach ($slideranges as $slide) {
   	if (preg_match('/([0-9]*)-([0-9]*)/',$slide,$matches)) {
-    	if ($matches[2]=='') $matches[2] = $num_steps;
-    	if ($matches[1]=='') $matches[1] = 1;  
-    	if ($matches[1]<1) $matches[1]==1;
-    	if ($matches[2]<1) $matches[2]==1; 	
-    	if (max($matches[2],$matches[1]) > $num_steps) {
-    		$slidesnotfound = 
-    			array_merge($slidesnotfound,
-    						range($num_steps+1,max($matches[2],$matches[1])));    		
-    	}
-		if ($matches[2]>$num_steps) $matches[2]=$num_steps;
-    	if ($matches[1]>$num_steps) $matches[1]=$num_steps;
+    		if ($matches[2]=='') $matches[2] = $num_steps;
+    		if ($matches[1]=='') $matches[1] = 1;  
+    		if ($matches[1]<1) $matches[1]==1;
+    		if ($matches[2]<1) $matches[2]==1; 	
+    		if (max($matches[2],$matches[1]) > $num_steps) {
+    			$slidesnotfound = 
+    				array_merge($slidesnotfound,
+    										range($num_steps+1,max($matches[2],$matches[1])));    		
+    		}
+				if ($matches[2]>$num_steps) $matches[2]=$num_steps;
+    		if ($matches[1]>$num_steps) $matches[1]=$num_steps;
     	
-    	var_dump($matches);
-    	$slides = array_merge($slides,range($matches[1],$matches[2]));
-  	} else {
-    	if (is_numeric($slide)) {
-  	   		if ($i>0 & $i <= $num_steps) { 
-				$slides[] = $slide; 
-			} else {
-				$slidesnotfound[] = $slide;
-			}	
-  		} else { // a string: look for slide with this id
-  			for ($i=0;$i < $num_steps; $i++) {
-  				if ($steps[$i]->id == $slide) {
-		    		$slides[] = $i+1; 
-		    		break;
-		    	}
-				if ($i== $num_steps - 1) $slidesnotfound[] = $slide;
-			}
-		}
+ 		   	$slides = array_merge($slides,range($matches[1],$matches[2]));
+  	} else { // not a range
+  	  	$slide = $slide+0;
+    		if (is_numeric($slide)) {
+  	   			if ($slide>0 & $slide <= $num_steps) { 
+								$slides[] = $slide; 
+						} else {
+								$slidesnotfound[] = $slide;
+						}	
+  			} else { // a string: look for slide with this id
+  					for ($i=0;$i < $num_steps; $i++) {
+  							if ($steps[$i]->id == $slide) {
+		    						$slides[] = $i+1; 
+		    						break;
+		    				}
+								if ($i== $num_steps - 1) $slidesnotfound[] = $slide;
+						}
+				}
   	} 
 }
 
@@ -129,6 +129,7 @@ echo 'Slides to process: ' . implode(',',$slides) . "\n";
 if (sizeof($slidesnotfound)>0) echo 'Slides not found: ' . implode(',',$slidesnotfound) . "\n";
 echo "\n";
 
+var_dump($options);
 // find the attributes to modify
 $attributes = array();
 foreach ($options as $optionkey=>$optionvalue) { 
@@ -144,6 +145,8 @@ foreach ($options as $optionkey=>$optionvalue) {
 		continue;
 	}
 }
+
+var_dump($attributes);
 
 // now start processing slides 
 foreach ($slides as $key=>$slide) {
