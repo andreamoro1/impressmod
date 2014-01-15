@@ -60,6 +60,7 @@ OPTIONS
 		=n (substitute value with n)
 		dn (add n*x from value - to increase distance between steps
         l (only list value)
+        u (unset value)
 	--y <value>
 	  data-y attribute change, <value> see --x
 	--z <value>
@@ -224,7 +225,12 @@ echo "\n";
 // now find the attributes to modify
 $attributes = array();
 foreach ($options as $optionkey=>$optionvalue) { 
-    preg_match('/(l)?([*\/d=])?([+-]?\d*)/',$optionvalue,$matchvalues);
+
+    // regex explanation
+    // first capturing group: 1 or more letter "l" (for listing values) or u (to unset value)
+    // second capturing group: d, * or / (for diff increases, multiplying or dividing)
+    // optional number with optional sign followed by optional dot and optional number 
+    preg_match('/([lu])?([*\/d=])?([+-]?([+-]?\d*.?\d*))/',$optionvalue,$matchvalues);
     
 	if (sizeof($matchvalues)==0) continue;
     
@@ -261,10 +267,15 @@ foreach ($slides as $key=>$slide) {
 		
 		// if asked only listing, continue listing
 		if ($optionvalue[1] == 'l') { 
-			echo " not changed \n";
-			continue;
-		} else {		
-			$there_are_changes = 1;		
+			echo "\n";
+		} else if ($optionvalue[1] == 'u' ) {
+			if (isset($step->attr[$attribute])) {
+				unset($step->attr[$attribute]);
+				$there_are_changes = 1;	
+			    echo " -> unset \n";	
+			}
+		} else if (is_numeric($optionvalue[3])) {		
+			$there_are_changes = 1;					
 			if ($optionvalue[2] == '=') {
 				$step->attr[$attribute] = $optionvalue[3];  
 			} elseif ($optionvalue[2] == 'd') {
@@ -276,18 +287,13 @@ foreach ($slides as $key=>$slide) {
 			} else {
 				$step->attr[$attribute] = $value + $optionvalue[3];
 			}  	  
-			echo ' -> ' . $step -> attr[$attribute] . "\n";
+			echo ' -> ' . $step -> attr[$attribute] . "\n";		
 		}
 	}
 }
 
 // back up and write files
 if ($there_are_changes == 1) {
-
-	$fp3 = fopen($outputfile,'w');
-	fwrite($fp3,$html);
-	fclose($fp3);
-	echo "\nOutput file: $outputfile";
 
 	if (!isset($options['nobackup'])) {
 		$fp = fopen($inputfile,'r');
@@ -296,9 +302,15 @@ if ($there_are_changes == 1) {
 		fwrite($fp2,$oldfile);
 		fclose($fp);
 		fclose($fp2);
-		echo "\nBackup file: $outputfile";
+		echo "\nBackup file: $outputfile" . '.bak';
 	}
+	$fp3 = fopen($outputfile,'w');
+	fwrite($fp3,$html);
+	fclose($fp3);
+	echo "\nOutput file: $outputfile";
 	echo "\n";
+} else {
+	echo "\nThere are no changes to save";
 }
 echo "\n";
 

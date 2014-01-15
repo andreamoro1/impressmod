@@ -8,7 +8,7 @@ SYNOPSIS
 
 DESCRIPTION
 	modifies location attributes of html slides created for impressmod.js
-	requires php with simple_html_dom.php library (included in distribution)
+	requires php with simple_html_dom.php library
 
 OPTIONS
 
@@ -26,6 +26,7 @@ OPTIONS
 		=n (substitute value with n)
 		dn (add n*x from value - to increase distance between steps
         l (only list value)
+        u (unset value)
 	--y <value>
 	  data-y attribute change, <value> see --x
 	--z <value>
