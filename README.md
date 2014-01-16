@@ -67,6 +67,7 @@ OPTIONS
 EXAMPLES
 
 1) php impressmod.php --f input.html --steps 3-5,7 --x -20 --y =200 --z *-5
+
 	decrease data-x by 20, set data-y to 200,
 	multiply data-z by -5
 	on slides 3,4,5,7 of input.html 
@@ -74,13 +75,16 @@ EXAMPLES
 	does not modify attribute on slides where  they are missing
 
 2) php impressmod.php --f input.html
+
 	list available slides and their id, if present
 
 3) php impressmod.php --f input.html --output output.html --steps 2,3,8-9 --x d20 --fm
+
 	increase the data-x gap between slides 2 and 3, 3 and 8, and 8 and 9 by 20. 
 	Slides 2 remains unchanged. Data-x will be created wherever missing
 
 4) php impressmod.php --f input.html --steps 5-2,overview,8
+
 	process slides in the following order: 5,4,3,2,[id=overview],8
 	
 AUTHORS
@@ -88,3 +92,4 @@ AUTHORS
 	
 LICENSE
 	GPL
+
