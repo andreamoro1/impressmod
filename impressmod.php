@@ -162,8 +162,7 @@ if (isset($options['list'])) {
 	$options['rx'] = 'l';
 	$options['ry'] = 'l';
 	$options['rz'] = 'l';
-	$options['x'] = 'l';
-
+	$options['s'] = 'l';
 }
 
 // get the dom from input file
@@ -199,8 +198,7 @@ foreach ($slideranges as $slide) {
 		if ($matches[1]>$num_steps) $matches[1]=$num_steps;	
 		$slides = array_merge($slides,range($matches[1],$matches[2]));		
   	} else { // not a range 	  	
-  	  	$slide = $slide+0;
-		if (is_numeric($slide)) {
+		if (intval($slide)>0) { //is an integer
 			if ($slide>0 & $slide <= $num_steps) { 
 							$slides[] = $slide; 
 				} else {
@@ -231,7 +229,6 @@ foreach ($options as $optionkey=>$optionvalue) {
     // second capturing group: d, * or / (for diff increases, multiplying or dividing)
     // optional number with optional sign followed by optional dot and optional number 
     preg_match('/([lu])?([*\/d=])?([+-]?([+-]?\d*.?\d*))/',$optionvalue,$matchvalues);
-    
 	if (sizeof($matchvalues)==0) continue;
     
 	$optionkey_first = substr($optionkey,0,1);
@@ -246,6 +243,9 @@ foreach ($options as $optionkey=>$optionvalue) {
 	}
 }
 
+if (isset($options['d'])) {echo "attributes \n"; var_dump($attributes);
+}
+
 $there_are_changes = 0;
 
 // now start processing slides and change attributes
@@ -258,36 +258,37 @@ foreach ($slides as $key=>$slide) {
 
 	foreach ($attributes as $attribute=>$optionvalue) {
 		
-		$value = $step->attr[$attribute];
+		$value = $step->getAttribute($attribute);
 		
-		// if option is not set in file and does not want to force it, continue
+		// if attribute is not set and does not want to force it, continue
 		if (!isset($options['fm']) & !isset($value)) continue;
 		
 		echo "  ".$attribute.': '.$value;
-		
+
 		// if asked only listing, continue listing
 		if ($optionvalue[1] == 'l') { 
+		    if (!($value===0 | $value==='0' | is_numeric($value) | $value==='') ) echo '(not set) ';
 			echo "\n";
 		} else if ($optionvalue[1] == 'u' ) {
-			if (isset($step->attr[$attribute])) {
-				unset($step->attr[$attribute]);
+			if ($step->hasAttribute($attribute)) {
+				$step->removeAttribute($attribute);
 				$there_are_changes = 1;	
 			    echo " -> unset \n";	
 			}
 		} else if (is_numeric($optionvalue[3])) {		
 			$there_are_changes = 1;					
 			if ($optionvalue[2] == '=') {
-				$step->attr[$attribute] = $optionvalue[3];  
+				$step->setAttribute($attribute,$optionvalue[3]); 
 			} elseif ($optionvalue[2] == 'd') {
-				$step->attr[$attribute] = $value + $key * $optionvalue[3];  
+				$step->setAttribute($attribute,$value + $key * $optionvalue[3]);  
 			} elseif ($optionvalue[2] == '*') {
-				$step->attr[$attribute] = $value * $optionvalue[3];
+				$step->setAttribute($attribute,$value * $optionvalue[3]);  
 			} elseif ($optionvalue[2] == '/') {
-				$step->attr[$attribute] = $value / $optionvalue[3];
-			} else {
-				$step->attr[$attribute] = $value + $optionvalue[3];
+				$step->setAttribute($attribute,$value / $optionvalue[3]);  
+			} else { // plus or minus
+				$step->setAttribute($attribute,$value + $optionvalue[3]);  
 			}  	  
-			echo ' -> ' . $step -> attr[$attribute] . "\n";		
+			echo ' -> ' . $step -> getAttribute($attribute) . "\n";		
 		}
 	}
 }
